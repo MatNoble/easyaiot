@@ -314,6 +314,59 @@ def create_app():
             ensure_train_task_name_column(db.engine)
             ensure_train_task_dataset_columns(db.engine)
             print(f"✅ 数据库连接成功，表结构已创建/验证")
+
+            # 同步环境/部署向导配置的大模型信息到数据库
+            llm_vendor = os.getenv('LLM_VENDOR')
+            if llm_vendor:
+                llm_model_name = os.getenv('LLM_MODEL_NAME', '')
+                llm_base_url = os.getenv('LLM_BASE_URL', '')
+                llm_api_key = os.getenv('LLM_API_KEY', '')
+                
+                print(f"🔄 检测到环境变量大模型配置: vendor={llm_vendor}, model={llm_model_name}")
+                
+                # 1. 禁用所有当前激活的模型
+                LLMModel.query.update({LLMModel.is_active: False})
+                
+                # 2. 查找是否已存在该 vendor 的模型
+                model = LLMModel.query.filter_by(vendor=llm_vendor, model_name=llm_model_name).first()
+                if not model:
+                    model = LLMModel.query.filter_by(vendor=llm_vendor).first()
+                    
+                if model:
+                    # 更新已有记录
+                    model.model_name = llm_model_name
+                    model.base_url = llm_base_url
+                    model.api_key = llm_api_key
+                    model.is_active = True
+                    model.status = 'active'
+                    model.service_type = 'local' if llm_vendor == 'local' else 'online'
+                    print(f"✅ 已更新并激活现有大模型配置: {model.name} (ID: {model.id})")
+                else:
+                    # 创建并激活新记录
+                    name_map = {
+                        'local': '本地 GPUStack 模型',
+                        'aliyun': '阿里云通义百炼 API',
+                        'openai': 'OpenAI API',
+                        'anthropic': 'Anthropic Claude API',
+                        'custom': '自定义 OpenAI 兼容 API'
+                    }
+                    model = LLMModel(
+                        name=name_map.get(llm_vendor, f"{llm_vendor.upper()}大模型"),
+                        service_type='local' if llm_vendor == 'local' else 'online',
+                        vendor=llm_vendor,
+                        model_type='vision',
+                        model_name=llm_model_name,
+                        base_url=llm_base_url,
+                        api_key=llm_api_key,
+                        temperature=0.7,
+                        max_tokens=2000,
+                        timeout=60,
+                        is_active=True,
+                        status='active'
+                    )
+                    db.session.add(model)
+                    print(f"✅ 已创建并激活大模型配置: {model.name}")
+                db.session.commit()
         except Exception as e:
             error_msg = str(e)
             print(f"❌ 数据库连接失败: {error_msg}")

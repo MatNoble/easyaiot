@@ -36,8 +36,12 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_URL:-jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-system
@@ -68,10 +72,14 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_URL:-jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
       - SPRING_RABBITMQ_HOST=localhost # RabbitMQ地址（如需要，请配置Docker服务名）
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka地址（使用Docker服务名）
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka地址（使用Docker服务名）
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-infra
@@ -105,11 +113,15 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
-      - MINIO_ENDPOINT=http://MinIO:9000 # Minio地址（使用Docker服务名）
-      - SPRING_KAFKA_IOT_PRODUCER_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka生产者地址（使用Docker服务名）
-      - SPRING_KAFKA_IOT_CONSUMER_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka消费者地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_URL:-jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio地址（使用Docker服务名）
+      - SPRING_KAFKA_IOT_PRODUCER_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka生产者地址（使用Docker服务名）
+      - SPRING_KAFKA_IOT_CONSUMER_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka消费者地址（使用Docker服务名）
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-device
@@ -143,10 +155,14 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
-      - MINIO_ENDPOINT=http://MinIO:9000 # Minio地址（使用Docker服务名）
-      - MINIO_BASE_URL=http://MinIO:9000 # Minio基础URL（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_URL:-jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio地址（使用Docker服务名）
+      - MINIO_BASE_URL=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio基础URL（使用Docker服务名）
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-dataset
@@ -215,10 +231,14 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
-      - MINIO_URL=http://MinIO:9000 # Minio地址（使用Docker服务名）
-      - MINIO_DOWNLOAD_URL=http://MinIO:9001 # Minio下载地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_URL:-jdbc:postgresql://PostgresSQL:5432/ruoyi-vue-pro20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SYSTEM_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
+      - MINIO_URL=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio地址（使用Docker服务名）
+      - MINIO_DOWNLOAD_URL=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio下载地址（使用Docker服务名）
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-file
@@ -252,15 +272,17 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/iot-message20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=postgres # PostgreSQL数据库用户名
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=iot45722414822 # PostgreSQL数据库密码
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL=jdbc:postgresql://PostgresSQL:5432/iot-video20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # VIDEO数据库地址（使用Docker服务名）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_USERNAME=postgres # VIDEO数据库用户名
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_PASSWORD=iot45722414822 # VIDEO数据库密码
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka地址（使用Docker服务名）
-      - MINIO_ENDPOINT=http://MinIO # Minio地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MESSAGE_URL:-jdbc:postgresql://PostgresSQL:5432/iot-message20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MESSAGE_USERNAME:-postgres} # PostgreSQL数据库用户名
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MESSAGE_PASSWORD:-iot45722414822} # PostgreSQL数据库密码
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL:-jdbc:postgresql://PostgresSQL:5432/iot-video20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified} # VIDEO数据库地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_USERNAME:-postgres} # VIDEO数据库用户名
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_PASSWORD:-iot45722414822} # VIDEO数据库密码
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka地址（使用Docker服务名）
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio地址（使用Docker服务名）
       - MINIO_PORT=9000 # Minio端口
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
@@ -300,15 +322,21 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=Nacos:8848 # 注册中心地址（使用Docker服务名）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_TDENGINE_URL=jdbc:TAOS-RS://TDengine:6041/iot_device?user=root&password=taosdata&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8 # TDengine数据库地址（使用Docker服务名）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL=jdbc:postgresql://PostgresSQL:5432/iot-video20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # VIDEO数据库地址（使用Docker服务名）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名）
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka地址（使用Docker服务名，用于标准配置）
-      - SPRING_KAFKA_IOT_PRODUCER_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka生产者地址（使用Docker服务名，用于自定义iot配置）
-      - SPRING_KAFKA_IOT_CONSUMER_BOOTSTRAP_SERVERS=Kafka:9092 # Kafka消费者地址（使用Docker服务名，用于自定义iot配置）
-      - MINIO_URL=http://MinIO:9000 # Minio地址（使用Docker服务名）
-      - MINIO_DOWNLOAD_URL=http://MinIO:9001 # Minio下载地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_URL:-jdbc:postgresql://PostgresSQL:5432/iot-device20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_DEVICE_PASSWORD:-iot45722414822}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_TDENGINE_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_TDENGINE_URL:-jdbc:TAOS-RS://TDengine:6041/iot_device?user=root&password=taosdata&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8} # TDengine数据库地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_URL:-jdbc:postgresql://PostgresSQL:5432/iot-video20?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified} # VIDEO数据库地址（使用Docker服务名）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_VIDEO_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka地址（使用Docker服务名，用于标准配置）
+      - SPRING_KAFKA_IOT_PRODUCER_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka生产者地址（使用Docker服务名，用于自定义iot配置）
+      - SPRING_KAFKA_IOT_CONSUMER_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-Kafka:9092} # Kafka消费者地址（使用Docker服务名，用于自定义iot配置）
+      - MINIO_URL=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio地址（使用Docker服务名）
+      - MINIO_DOWNLOAD_URL=${MINIO_ENDPOINT:-http://MinIO:9000} # Minio下载地址（使用Docker服务名）
       - MINIO_ACCESS_KEY=minioadmin # Minio访问密钥
       - MINIO_SECRET_KEY=basiclab@iot975248395 # Minio秘密密钥
       # SkyWalking配置（如需要，请取消注释并配置）
@@ -354,8 +382,12 @@ services:
       - SPRING_CLOUD_NACOS_CONFIG_NAMESPACE= # 使用默认命名空间（public）
       - SPRING_CLOUD_NACOS_SERVER_ADDR=localhost:8848 # 注册中心地址（使用host网络模式，通过localhost访问）
       - SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE= # 使用默认命名空间（public）
-      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=jdbc:postgresql://PostgresSQL:5432/iot-gb2818120?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified # PostgreSQL数据库地址（使用Docker服务名，通过extra_hosts映射）
-      - SPRING_REDIS_HOST=Redis # Redis地址（使用Docker服务名，通过extra_hosts映射）
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_GB28181_URL:-jdbc:postgresql://PostgresSQL:5432/iot-gb2818120?autoReconnect=true&autoReconnectForPools=true&useUnicode=true&characterEncoding=utf8&createDatabaseIfNotExist=true&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull&stringtype=unspecified}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_GB28181_USERNAME:-postgres}
+      - SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=${SPRING_DATASOURCE_DYNAMIC_DATASOURCE_GB28181_PASSWORD:-iot45722414822}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-Redis} # Redis地址（使用Docker服务名，通过extra_hosts映射）
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${SPRING_REDIS_PASSWORD:-basiclab@iot975248395}
       # SkyWalking配置（如需要，请取消注释并配置）
       # - JAVA_TOOL_OPTIONS=-javaagent:/data/skywalking/skywalking-agent/skywalking-agent.jar
       # - SW_AGENT_NAME=iot-gb28181

@@ -1,0 +1,518 @@
+services:
+  # 中间件端口统一 0.0.0.0:宿主机:容器，避免部分环境仅绑定 [::] 导致本机走 127.0.0.1 连接失败。
+  # Nacos Server
+  Nacos:
+    image: nacos/nacos-server:v2.5.1
+    container_name: nacos-server
+    restart: always
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_ENABLE=true
+      - NACOS_AUTH_IDENTITY_KEY=nacos
+      - NACOS_AUTH_IDENTITY_VALUE=nacos
+      - NACOS_AUTH_TOKEN=SecretKey345901234567890126785678901234567890123901234567890123445678
+      - JVM_XMS=512m
+      - JVM_XMX=512m
+      - JVM_XMN=256m
+      - JVM_MS=128m
+      - JVM_MMS=320m
+    volumes:
+      - ./standalone-logs/:/home/nacos/logs:rw
+    ports:
+      - "0.0.0.0:8848:8848"
+      - "0.0.0.0:9848:9848"
+      - "0.0.0.0:9849:9849"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8848/nacos/actuator/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - easyaiot-network
+
+  # PostgresSQL 初始化容器（自动修复权限）
+  # 在 PostgreSQL 启动前自动运行，修复数据目录权限问题
+  # 解决 "could not open file global/pg_filenode.map: Permission denied" 错误
+  PostgresSQL-init:
+    image: postgres:18
+    container_name: postgres-init
+    user: "0:0"
+    volumes:
+      - ./db_data/data:/var/lib/postgresql/data:rw
+      - ./db_data/log:/var/log/postgresql:rw
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "mkdir -p /var/lib/postgresql/data /var/log/postgresql && chown -R 999:999 /var/lib/postgresql/data /var/log/postgresql && chmod -R 777 /var/lib/postgresql/data && chmod -R 777 /var/log/postgresql && echo '[PostgreSQL Init] 权限设置完成'",
+      ]
+    restart: "no"
+    networks:
+      - easyaiot-network
+
+  # PostgresSQL Server
+  PostgresSQL:
+    image: postgres:18
+    container_name: postgres-server
+    restart: always
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      - TZ=Asia/Shanghai
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=iot45722414822
+      - POSTGRES_DB=postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./db_data/data:/var/lib/postgresql/data:rw
+      - ./db_data/log:/var/log/postgresql:rw
+      # SQL 文件挂载（按字母顺序执行）
+      # 注意：确保 ../postgresql 目录存在，否则挂载会失败
+      - ../postgresql:/docker-entrypoint-initdb.d:rw
+      # 数据库初始化脚本（00- 前缀确保在 SQL 文件之前执行）
+      # 注意：确保 ./init-databases.sh 文件存在，否则挂载会失败
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:rw
+      # PostgreSQL entrypoint 脚本（自动修复权限）
+      # 注意：确保 ./postgresql-entrypoint.sh 文件存在，否则挂载会失败
+      # 使用相对路径（相对于 docker-compose.yml 所在目录）
+      - ./postgresql-entrypoint.sh:/postgresql-entrypoint.sh:ro
+    # 使用自定义 entrypoint，在启动前自动修复权限
+    # 容器以 root 启动，entrypoint 会修复权限后切换到 postgres 用户
+    # 这样可以自动解决 "could not open file global/pg_filenode.map: Permission denied" 错误
+    user: "0:0"
+    entrypoint: ["/bin/bash", "/postgresql-entrypoint.sh"]
+    # 设置 PostgreSQL 最大连接数为 10240（默认是 100）
+    # 注意：max_connections 需要根据系统资源调整，建议值：
+    # - 小型系统：200-300
+    # - 中型系统：500-800
+    # - 大型系统：1000+
+    # - 超大型系统：5000-10240
+    command: ["postgres", "-c", "max_connections=10240", "-c", "shared_buffers=256MB"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - easyaiot-network
+
+  # TDengine Server
+  TDengine:
+    image: tdengine/tsdb:3.3.8.4
+    container_name: tdengine-server
+    privileged: true
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "0.0.0.0:6030:6030"
+      - "0.0.0.0:6041:6041"
+      - "0.0.0.0:6060:6060"
+      - "0.0.0.0:6043-6049:6043-6049/tcp"
+      - "0.0.0.0:6043-6049:6043-6049/udp"
+    volumes:
+      - "./taos_data/data:/var/lib/taos:rw"
+      - "./taos_data/log:/var/log/taos:rw"
+      # TDengine entrypoint 脚本（自动修复权限）
+      # 注意：确保 ./tdengine-entrypoint.sh 文件存在，否则挂载会失败
+      - ./tdengine-entrypoint.sh:/tdengine-entrypoint.sh:rw
+    entrypoint: ["/bin/bash", "/tdengine-entrypoint.sh"]
+    # 增加文件描述符限制，解决 "Too many open files" 错误
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "taos -h localhost -s 'select 1;' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - easyaiot-network
+
+  # TDengine 初始化容器（在 TDengine 就绪后执行数据库和超级表初始化）
+  TDengine-init:
+    image: tdengine/tdengine:3.3.0.0
+    container_name: tdengine-init
+    depends_on:
+      TDengine:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Shanghai
+      - TDENGINE_HOST=tdengine-server
+      - TDENGINE_PORT=6030
+      - DB_NAME=iot_device
+    volumes:
+      # TDengine 初始化脚本
+      # 注意：确保 ./init-tdengine.sh 文件存在，否则挂载会失败
+      - ./init-tdengine.sh:/init-tdengine.sh:rw
+      # TDengine SQL 文件目录
+      # 注意：确保 ../tdengine 目录存在，否则挂载会失败
+      - ../tdengine:/init-sql:rw
+    command: ["/bin/bash", "/init-tdengine.sh"]
+    restart: "no"
+    networks:
+      - easyaiot-network
+
+  # Redis Server
+  Redis:
+    image: redis:7.4.8
+    container_name: redis-server
+    restart: always
+    privileged: true
+    ports:
+      - "0.0.0.0:6379:6379"
+    environment:
+      - TZ=Asia/Shanghai
+    command: >
+      redis-server
+      --save 60 1000
+      --loglevel warning
+      --appendonly yes
+      --requirepass basiclab@iot975248395
+      --maxclients 10000
+      --timeout 300
+      --tcp-keepalive 60
+      --tcp-backlog 511
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - "./redis_data/data:/data:rw"
+      - "./redis_data/logs:/logs:rw"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a basiclab@iot975248395 ping | grep PONG || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20M"
+        max-file: "10"
+    networks:
+      - easyaiot-network
+
+  # kafka
+  Kafka:
+    image: apache/kafka:3.8.0
+    container_name: kafka-server
+    restart: always
+    ports:
+      - "0.0.0.0:9092:9092"
+      - "0.0.0.0:9093:9093"
+      - "0.0.0.0:9094:9094"
+    environment:
+      - TZ=Asia/Shanghai
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
+      # 配置 advertised listeners 以支持不同的网络模式：
+      # - INTERNAL://Kafka:9092 - 用于 Docker 网络内的服务（如 DEVICE 服务）
+      # - EXTERNAL://localhost:9094 - 用于 host 网络模式的服务（如 VIDEO 服务）
+      # 注意：每个监听器必须有不同的名称，否则 Kafka 会报错
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://Kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@Kafka:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      # 告警主题默认 64 分区，缓解摄像头高频告警单分区积压
+      - KAFKA_NUM_PARTITIONS=64
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR=1
+      # 吞吐与网络调优（适配大消息体告警 JSON / 图片路径）
+      - KAFKA_NUM_NETWORK_THREADS=8
+      - KAFKA_NUM_IO_THREADS=16
+      - KAFKA_SOCKET_SEND_BUFFER_BYTES=102400
+      - KAFKA_SOCKET_RECEIVE_BUFFER_BYTES=102400
+      - KAFKA_SOCKET_REQUEST_MAX_BYTES=104857600
+      - KAFKA_MESSAGE_MAX_BYTES=10485760
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=10485760
+      - KAFKA_LOG_SEGMENT_BYTES=536870912
+      - CLUSTER_ID=4L6g3nShT-eMCtK--X86sw
+      - KAFKA_LOG_RETENTION_HOURS=168
+      - KAFKA_LOG_DIRS=/var/lib/kafka/data
+    volumes:
+      - ./mq_data/data:/var/lib/kafka/data:rw
+    # 使用 extra_hosts 让 Kafka 容器内也能通过 hosts 解析服务
+    # host.docker.internal 指向宿主机（Docker 20.10+ 支持）
+    # 如果系统不支持，可以通过环境变量 HOST_IP 动态配置
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - easyaiot-network
+
+  # MinIO Server
+  MinIO:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio-server
+    restart: always
+    ports:
+      - "0.0.0.0:9000:9000"
+      - "0.0.0.0:9001:9001"
+    environment:
+      - TZ=Asia/Shanghai
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=basiclab@iot975248395
+    command: server /data --console-address ":9001"
+    volumes:
+      - "./minio_data/data:/data:rw"
+      - "./minio_data/config:/root/.minio:rw"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - easyaiot-network
+
+  # Milvus Vector Database
+  Milvus:
+    image: milvusdb/milvus:v2.6.0
+    container_name: milvus-server
+    restart: always
+    command: ["milvus", "run", "standalone"]
+    environment:
+      - TZ=Asia/Shanghai
+      - ETCD_USE_EMBED=true
+      - DEPLOY_MODE=STANDALONE
+      - ETCD_DATA_DIR=/var/lib/milvus/etcd
+      - ETCD_CONFIG_PATH=/milvus/configs/embedEtcd.yaml
+      - COMMON_STORAGETYPE=local
+    ports:
+      - "0.0.0.0:19530:19530"
+      - "0.0.0.0:9091:9091"
+    volumes:
+      - "./milvus_data:/var/lib/milvus:rw"
+      - "./milvus_config/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml:ro"
+      - "./milvus_config/user.yaml:/milvus/configs/user.yaml:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9091/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - easyaiot-network
+
+  # SRS Server
+  SRS:
+    image: ossrs/srs:5
+    container_name: srs-server
+    restart: always
+    network_mode: host # 使用host网络模式，直接使用宿主机网络
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - "./srs_data/conf:/usr/local/srs/conf:rw"
+      - "./srs_data/conf:/opt/srs/trunk/conf:rw"
+      # 宿主机根目录 /data 映射为容器内录像与日志目录（安装脚本会在启动前创建 /data）
+      - "/data:/data:rw"
+    command: ["./objs/srs", "-c", "conf/docker.conf"]
+    working_dir: /usr/local/srs
+    healthcheck:
+      test:
+        ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1985' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Node-RED Server
+  NodeRED:
+    image: nodered/node-red:latest
+    container_name: nodered-server
+    restart: always
+    ports:
+      - "0.0.0.0:1880:1880"
+    environment:
+      - TZ=Asia/Shanghai
+      - NODE_OPTIONS=--max-old-space-size=512
+    user: "1000:1000"
+    volumes:
+      - "./nodered_data/data:/data:rw"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:1880/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - easyaiot-network
+
+  # EMQX MQTT Broker
+  EMQX:
+    image: emqx/emqx:5.8.7
+    container_name: emqx-server
+    restart: always
+    ports:
+      - "0.0.0.0:1883:1883" # MQTT
+      - "0.0.0.0:8883:8883" # MQTT/SSL
+      - "0.0.0.0:8083:8083" # WebSocket
+      - "0.0.0.0:8084:8084" # WebSocket/SSL
+      - "0.0.0.0:18083:18083" # Dashboard
+    environment:
+      - TZ=Asia/Shanghai
+      - EMQX_NAME=emqx
+      - EMQX_HOST=127.0.0.1
+      - EMQX_NODE__COOKIE=emqxsecretcookie
+      - EMQX_CLUSTER__DISCOVERY_STRATEGY=static
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=basiclab@iot6874125784
+      - EMQX_LOG__LEVEL=warning
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 5s
+      timeout: 25s
+      retries: 5
+    networks:
+      - easyaiot-network
+
+  # ZLMediaKit Media Server
+  ZLMediaKit:
+    image: zlmediakit/zlmediakit:master
+    container_name: zlmediakit-server
+    restart: always
+    ports:
+      - "0.0.0.0:6080:80/tcp"     # HTTP 播流端口
+      - "0.0.0.0:4443:443/tcp"    # HTTPS 播流端口
+      - "0.0.0.0:10935:10935/tcp" # RTMP 收流端口
+      - "0.0.0.0:10935:10935/udp" # RTMP 收流端口
+      - "0.0.0.0:5540:5540/tcp"   # RTSP 收流端口
+      - "0.0.0.0:5540:5540/udp"   # RTSP 收流端口
+      - "0.0.0.0:10000:10000/tcp" # RTP 收流端口
+      - "0.0.0.0:10000:10000/udp" # RTP 收流端口
+      - "0.0.0.0:8001:8001/tcp"   # WebRTC 端口（避免与SRS的8000端口冲突）
+      - "0.0.0.0:8001:8001/udp"   # WebRTC 端口（避免与SRS的8000端口冲突）
+      - "0.0.0.0:9002:9002/tcp"   # SRT 端口（避免与MinIO的9000端口冲突）
+      - "0.0.0.0:9002:9002/udp"   # SRT 端口（避免与MinIO的9000端口冲突）
+      - "0.0.0.0:10001:10001/tcp" # RTMP 端口（内部）
+      - "0.0.0.0:10002:10002/tcp" # RTSP 端口（内部）
+      - "0.0.0.0:10003:10003/tcp" # RTP Proxy 端口
+      - "0.0.0.0:30000-30500:30000-30500/udp" # RTP Proxy 端口范围
+      - "0.0.0.0:30000-30500:30000-30500/tcp"
+
+    environment:
+      - TZ=Asia/Shanghai
+    # 数据目录：.scripts/zlmediakit（相对本文件为 ../zlmediakit）
+    volumes:
+      - "../zlmediakit/www:/opt/media/bin/www:rw"
+      - "../zlmediakit/log:/opt/media/log:rw"
+      - "../zlmediakit/conf:/conf:rw"
+    command:
+      [
+        "MediaServer",
+        "-c", "/conf/config.ini",
+        "-l", "0"
+      ]
+    # 使用 extra_hosts 让 ZLMediaKit 容器内也能通过 hosts 解析宿主机
+    # host.docker.internal 指向宿主机（Docker 20.10+ 支持）
+    # 如果系统不支持，可以通过环境变量 HOST_IP 动态配置
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # 健康检查需带 secret（与 config.ini [api] secret 一致），否则 ZLM 返回 Required parameter missed: "secret"
+    healthcheck:
+      test: ["CMD-SHELL", "SECRET=$$(grep '^[[:space:]]*secret=' /conf/config.ini 2>/dev/null | head -1 | cut -d= -f2 | tr -d '\\\\r'); if [ -n \"$$SECRET\" ]; then curl -f \"http://localhost:80/index/api/getServerConfig?secret=$$SECRET\"; else curl -f http://localhost:80/index/api/getServerConfig; fi || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - easyaiot-network
+
+  # GPUStack v2.1.2 — GPU/算力资源监测与管控（Web UI、集群与 Worker 管理）
+  # Web UI: http://localhost:10180  用户 admin，密码见 GPUSTACK_BOOTSTRAP_PASSWORD（仅首次初始化生效）
+  # Dify 由 install_middleware_linux.sh 独立 compose 部署，目录: ./dify_data（端口默认 10190）
+  # 首次安装请访问 http://<宿主机IP>:10190/install 完成管理员初始化
+  GPUStack:
+    image: gpustack/gpustack:v2.1.2
+    container_name: gpustack-server
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      # Worker 注册地址（install 脚本会根据宿主机 IP 注入 GPUSTACK_SERVER_EXTERNAL_URL）
+      - GPUSTACK_SERVER_EXTERNAL_URL=${GPUSTACK_SERVER_EXTERNAL_URL:-http://host.docker.internal:10180}
+      # 默认 admin 初始密码（bootstrap 仅在首次创建数据目录时生效）
+      - GPUSTACK_BOOTSTRAP_PASSWORD=${GPUSTACK_BOOTSTRAP_PASSWORD:-basiclab@iotp4JWmQSvzdh0z4mF}
+    volumes:
+      - "./gpustack_data:/var/lib/gpustack:rw"
+      # 用于在本机注册 Worker、管理推理容器
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "0.0.0.0:10180:80" # Web UI 与 API（避免占用宿主机 80）
+      - "0.0.0.0:10161:10161" # Server metrics
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - easyaiot-network
+
+# 磁盘挂载
+volumes:
+  nacos_data:
+    driver: local
+  db_data:
+    driver: local
+  taos_data:
+    driver: local
+  redis_data:
+    driver: local
+  mq_data:
+    driver: local
+  minio_data:
+    driver: local
+  milvus_data:
+    driver: local
+  srs_data:
+    driver: local
+  nodered_data:
+    driver: local
+  emqx_data:
+    driver: local
+  emqx_log:
+    driver: local
+
+# 网络配置
+# 注意：当宿主机IP发生变化后，如果容器无法加入网络，请执行以下命令修复：
+# 1. docker network rm easyaiot-network
+# 2. docker network create easyaiot-network
+# 3. docker-compose restart
+networks:
+  easyaiot-network:
+    name: easyaiot-network
+    external: true

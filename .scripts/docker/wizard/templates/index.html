@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyAIoT 一键部署配置向导</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* CSS 变量与设计系统 */
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --font-outfit: 'Outfit', 'Inter', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow-glow: 0 0 20px var(--primary-glow);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 基础复位 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(88, 28, 135, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(30, 58, 138, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: var(--font-inter);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-y: scroll;
+        }
+
+        /* 页面包装器 */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* 页眉设计 */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .logo-area {
+            display: inline-block;
+            background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-family: var(--font-outfit);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3);
+            letter-spacing: 1px;
+        }
+
+        header h1 {
+            font-family: var(--font-outfit);
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #ffffff, #c084fc, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 渐进式引导步骤条 */
+        .step-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #1f2937;
+            border: 2px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-outfit);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 8px;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        /* 步骤连线 */
+        .step-line-bg {
+            position: absolute;
+            top: 38px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: #1f2937;
+            z-index: 1;
+        }
+
+        .step-line-active {
+            position: absolute;
+            top: 38px;
+            left: 10%;
+            width: 0%;
+            height: 2px;
+            background: linear-gradient(90deg, #a78bfa, #6d28d9);
+            z-index: 1;
+            transition: var(--transition);
+            box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
+        }
+
+        /* 激活与完成状态 */
+        .step-item.active .step-num {
+            background: var(--primary);
+            border-color: #c084fc;
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .step-item.active .step-label {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .step-item.completed .step-num {
+            background: var(--accent-green);
+            border-color: #34d399;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .step-item.completed .step-label {
+            color: var(--accent-green);
+        }
+
+        /* 向导页面容器 */
+        .wizard-step-page {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .wizard-step-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 标题区样式 */
+        .page-title {
+            font-family: var(--font-outfit);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 20px;
+        }
+
+        /* 磨砂玻璃卡片 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 180px;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(167, 139, 250, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(109, 40, 217, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-family: var(--font-outfit);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            flex-grow: 1;
+        }
+
+        .card-meta {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .card-meta.essential {
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .card-meta.heavy {
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* 开关切换钮 */
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .switch-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .checkbox-container {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .checkbox-container input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.08);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        input:disabled + .slider {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* 配置容器卡片 */
+        .config-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            backdrop-filter: blur(12px);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .form-helper {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .radio-btn {
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .radio-btn input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-btn:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .radio-btn.active {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.12);
+            color: #ffffff;
+        }
+
+        /* 导航控制条 */
+        .nav-control-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 按钮设计 */
+        .btn {
+            font-family: var(--font-outfit);
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(109, 40, 217, 0.5), var(--shadow-glow);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #ffffff;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 命令行终端 */
+        .terminal-wrapper {
+            background: #05070c;
+            border: 1px solid #1f2937;
+            border-radius: var(--radius-lg);
+            margin-top: 25px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            background: #111827;
+            padding: 10px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background-color: #ef4444; }
+        .terminal-dot.yellow { background-color: #f59e0b; }
+        .terminal-dot.green { background-color: #10b981; }
+
+        .terminal-title {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-console {
+            height: 300px;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #34d399;
+            background-color: #05070c;
+            line-height: 1.4;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .terminal-line.error { color: var(--accent-red); }
+        .terminal-line.warn { color: #f59e0b; }
+        .terminal-line.success { color: var(--accent-green); }
+        .terminal-line.info { color: #60a5fa; }
+
+        /* 看板表格 */
+        .status-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            margin-top: 25px;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .status-table th {
+            padding: 10px 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 2px solid var(--card-border);
+            font-size: 0.85rem;
+        }
+
+        .status-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .deploying-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8rem; }
+            .step-progress { flex-direction: column; gap: 15px; }
+            .step-line-bg, .step-line-active { display: none; }
+            .nav-control-bar { flex-direction: column; gap: 12px; }
+            .btn { width: 100%; justify-content: center; }
+        }
+
+        /* 吐司通知 styles */
+        .toast-msg {
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--primary-glow);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+
+        .toast-msg.success {
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .toast-msg.error {
+            border-color: var(--accent-red);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .toast-msg.warning {
+            border-color: #f59e0b;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 吐司通知容器 -->
+<div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+
+<div class="container">
+    <!-- 页眉 -->
+    <header>
+        <div class="logo-area">EasyAIoT Wizard</div>
+        <h1>云边端一体化部署配置向导</h1>
+        <p>跟着向导步骤进行渐进式部署。您可以根据本地硬件配置自主勾选服务，实现极简与轻量化启动。</p>
+    </header>
+
+    <!-- 步骤条进度器 -->
+    <div class="step-progress">
+        <div class="step-line-bg"></div>
+        <div class="step-line-active" id="progress-line"></div>
+        
+        <div class="step-item active" id="step-node-1">
+            <div class="step-num">1</div>
+            <div class="step-label">选择中间件</div>
+        </div>
+        <div class="step-item" id="step-node-2">
+            <div class="step-num">2</div>
+            <div class="step-label">微服务容器</div>
+        </div>
+        <div class="step-item" id="step-node-3">
+            <div class="step-num">3</div>
+            <div class="step-label">环境变量选项</div>
+        </div>
+        <div class="step-item" id="step-node-4">
+            <div class="step-num">4</div>
+            <div class="step-label">执行部署监控</div>
+        </div>
+    </div>
+
+    <!-- 步骤 1：选择中间件 -->
+    <div class="wizard-step-page active" id="step-page-1">
+        <div class="page-title">📦 步骤 1: 选择中间件模块</div>
+        <div class="grid-layout">
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">Nacos Server</h3>
+                    <p class="card-desc">服务注册与配置中心，为各微服务提供动态寻址功能。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-Nacos" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">PostgreSQL</h3>
+                    <p class="card-desc">主数据库，存储设备档案、报警历史和系统配置。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-PostgresSQL" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">Redis</h3>
+                    <p class="card-desc">高速缓存，管理微服务心跳以及高频热点数据缓存。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-Redis" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">MinIO Server</h3>
+                    <p class="card-desc">对象存储，用于保存报警抓图、短视频和AI数据集。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-MinIO" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">Kafka</h3>
+                    <p class="card-desc">消息队列，视频分析的报警消息异步分发通知通道。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-Kafka" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta essential">核心必选</span>
+                    <h3 class="card-title">ZLMediaKit / SRS</h3>
+                    <p class="card-desc">视频流媒体服务器，提供摄像头拉流、转推FLV播放。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">始终开启</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-SRS" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta">IoT/时序模块可选</span>
+                    <h3 class="card-title">TDengine</h3>
+                    <p class="card-desc">时序数据库，处理物联网测点海量时序波形存储。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-TDengine" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta heavy">重度可选</span>
+                    <h3 class="card-title">EMQX Broker</h3>
+                    <p class="card-desc">MQTT Broker。如果不连接物联网传感器，只做视频AI，可不勾选。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-EMQX">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta heavy">重度可选</span>
+                    <h3 class="card-title">Milvus Vector DB</h3>
+                    <p class="card-desc">人脸特征数据库。若不进行人脸对比检索，建议禁用以省显存。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-Milvus">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta heavy">重度可选</span>
+                    <h3 class="card-title">GPUStack</h3>
+                    <p class="card-desc">本地大语言模型与视觉大模型管控。若使用厂商云API可关闭。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-GPUStack">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <span class="card-meta">可选</span>
+                    <h3 class="card-title">Node-RED</h3>
+                    <p class="card-desc">轻量级流程编排工具。常规视频分析不需要开启。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="mw-NodeRED">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-control-bar">
+            <div></div>
+            <button class="btn btn-primary" onclick="changeStep(2)">下一步 ➔</button>
+        </div>
+    </div>
+
+    <!-- 步骤 2：选择微服务 -->
+    <div class="wizard-step-page" id="step-page-2">
+        <div class="page-title">🤖 步骤 2: 微服务容器部署选择</div>
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: var(--radius-md); margin-bottom: 25px; font-size: 0.9rem; color: #f59e0b;">
+            💡 <b>Windows 本地开发建议</b>: 如果您在 Windows 宿主机上本地开发，建议将下方微服务容器部署<b>全部关闭</b>。您只需在 Docker 中运行第一步勾选的中间件，这些核心微服务则在 IDEA / VS Code / 终端中本地启动运行，更加便于热加载和断点调试，开发机资源消耗也会更低。
+        </div>
+        <div class="grid-layout">
+            <div class="card">
+                <div>
+                    <h3 class="card-title">DEVICE 微服务</h3>
+                    <p class="card-desc">Java 核心后台（含网关、系统模块与配置同步逻辑）。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用容器部署</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="svc-DEVICE">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <h3 class="card-title">AI 推理后台</h3>
+                    <p class="card-desc">Python (FastAPI) 核心服务，负责本地 YOLO 推理和模型运行。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用容器部署</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="svc-AI">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <h3 class="card-title">VIDEO 分析网关</h3>
+                    <p class="card-desc">Python (Flask) 服务，拉取摄像头 RTSP 并解码提取帧传输检测。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用容器部署</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="svc-VIDEO">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <h3 class="card-title">WEB 前端展示</h3>
+                    <p class="card-desc">Nginx 托管的前端 Web 交互控制台，管理配置画框和大屏。</p>
+                </div>
+                <div class="switch-wrapper">
+                    <span class="switch-label">启用容器部署</span>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="svc-WEB">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-control-bar">
+            <button class="btn btn-secondary" onclick="changeStep(1)">⬅ 上一步</button>
+            <button class="btn btn-primary" onclick="changeStep(3)">下一步 ➔</button>
+        </div>
+    </div>
+
+    <!-- 步骤 3：配置参数 -->
+    <div class="wizard-step-page" id="step-page-3">
+        <div class="page-title">⚙️ 步骤 3: 环境变量与配置参数选项</div>
+        <div class="config-card">
+            <div class="form-grid">
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">关系型数据库运行模式</label>
+                        <div class="radio-group" id="db-mode-group">
+                            <div class="radio-btn active" onclick="selectRadio('db-mode', 'local')">
+                                <input type="radio" name="db-mode" value="local" checked>
+                                本地 Docker 数据库
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('db-mode', 'cloud')">
+                                <input type="radio" name="db-mode" value="cloud">
+                                外部云数据库 (SaaS)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="db-url-group" style="display: none;">
+                        <label class="form-label">外部 PostgreSQL JDBC 字符串</label>
+                        <input type="text" id="DATABASE_URL" class="form-input" placeholder="postgresql://postgres:密码@宿主机IP:5432/iot-video20">
+                    </div>
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;">Docker 镜像拉取加速源 (国内环境推荐)</label>
+                            <span id="mirror-probe-status" style="font-size: 0.78rem; color: var(--text-muted); transition: var(--transition);"></span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="DOCKER_MIRROR" class="form-input" style="background-color: #0b0f19; flex-grow: 1;">
+                                <option value="https://docker.m.daocloud.io">DaoCloud 镜像 (docker.m.daocloud.io)</option>
+                                <option value="">直连 (Docker Hub 官方默认)</option>
+                                <option value="https://docker.1ms.run">毫秒镜像 (docker.1ms.run)</option>
+                                <option value="https://docker.xuanyuan.me">轩辕镜像 (docker.xuanyuan.me)</option>
+                                <option value="https://docker.1panel.live">1Panel 镜像 (docker.1panel.live)</option>
+                            </select>
+                            <button type="button" id="btn-probe-mirror" class="btn btn-secondary" style="padding: 10px 16px; font-size: 0.82rem; white-space: nowrap; border-radius: var(--radius-md); height: 40px; display: flex; align-items: center; gap: 4px;" onclick="triggerProbeMirrors(true)">
+                                ⚡ 自动测速
+                            </button>
+                        </div>
+                        <div class="form-helper">拉取官方镜像缓慢时使用，保存后将自动重写 Image 拉取地址。</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kafka 连接地址</label>
+                        <input type="text" id="KAFKA_BOOTSTRAP_SERVERS" class="form-input" value="localhost:9092">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">MinIO 存储端点</label>
+                        <input type="text" id="MINIO_ENDPOINT" class="form-input" value="localhost:9000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Redis 连接地址</label>
+                        <input type="text" id="REDIS_HOST" class="form-input" value="localhost:6379">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Redis 密码</label>
+                        <input type="password" id="REDIS_PASSWORD" class="form-input" value="basiclab@iot975248395">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">英伟达显卡加速 (GPU)</label>
+                        <div class="radio-group" id="gpu-mode-group">
+                            <div class="radio-btn active" onclick="selectRadio('gpu-mode', 'true')">
+                                <input type="radio" name="gpu-mode" value="true" checked>
+                                启用 GPU 显卡加速
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('gpu-mode', 'false')">
+                                <input type="radio" name="gpu-mode" value="false">
+                                仅 CPU 运行
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">AI 视觉推理大模型提供商</label>
+                        <div class="radio-group" id="ai-provider-group" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                            <div class="radio-btn active" onclick="selectRadio('ai-provider', 'local')">
+                                <input type="radio" name="ai-provider" value="local" checked>
+                                本地 GPUStack
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('ai-provider', 'aliyun')">
+                                <input type="radio" name="ai-provider" value="aliyun">
+                                阿里云通义百炼
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('ai-provider', 'openai')">
+                                <input type="radio" name="ai-provider" value="openai">
+                                OpenAI (ChatGPT)
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('ai-provider', 'anthropic')">
+                                <input type="radio" name="ai-provider" value="anthropic">
+                                Anthropic Claude
+                            </div>
+                            <div class="radio-btn" onclick="selectRadio('ai-provider', 'custom')">
+                                <input type="radio" name="ai-provider" value="custom">
+                                自定义 OpenAI 兼容
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ai-api-key-group" style="display: none;">
+                        <label class="form-label" id="ai-api-key-label">API Key / 密钥</label>
+                        <input type="password" id="LLM_API_KEY" class="form-input" placeholder="输入 API Key">
+                    </div>
+                    <div class="form-group" id="ai-base-url-group" style="display: none;">
+                        <label class="form-label">API 基础 URL (Base URL)</label>
+                        <input type="text" id="LLM_BASE_URL" class="form-input" placeholder="例如 https://api.openai.com/v1">
+                    </div>
+                    <div class="form-group" id="ai-model-name-group" style="display: none;">
+                        <label class="form-label">大模型标识 (Model Name)</label>
+                        <input type="text" id="LLM_MODEL_NAME" class="form-input" placeholder="例如 gpt-4o">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">AI 服务推理端口 URL</label>
+                        <input type="text" id="AI_SERVICE_URL" class="form-input" value="http://localhost:5000">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-control-bar">
+            <button class="btn btn-secondary" onclick="changeStep(2)">⬅ 上一步</button>
+            <button class="btn btn-primary" onclick="changeStep(4)">下一步 ➔</button>
+        </div>
+    </div>
+
+    <!-- 步骤 4：部署执行与看板 -->
+    <div class="wizard-step-page" id="step-page-4">
+        <div class="page-title">🚀 步骤 4: 执行一键部署与状况监控看板</div>
+        
+        <!-- 操作条 -->
+        <div class="nav-control-bar" style="border: none; margin-top: 0; padding-top: 0;">
+            <button class="btn btn-secondary" id="back-btn-step4" onclick="changeStep(3)">⬅ 上一步</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="deploy-btn" class="btn btn-primary" onclick="startDeployment()">🚀 保存并执行部署</button>
+                <button id="stop-btn" class="btn btn-danger" onclick="stopDeployment()">⏹️ 停止卸载容器</button>
+                <button id="refresh-btn" class="btn btn-secondary" onclick="fetchStatus()">🔄 刷新看板</button>
+            </div>
+        </div>
+
+        <!-- 终端日志框 -->
+        <div class="terminal-wrapper" id="terminal-container" style="display: none;">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                </div>
+                <div class="terminal-title">Docker Compose Deployment logs</div>
+                <div style="width: 30px;"></div>
+            </div>
+            <div class="terminal-console" id="console-output"></div>
+        </div>
+
+        <!-- 看板列表 -->
+        <div class="status-wrapper">
+            <div class="page-title" style="font-size: 1.1rem; margin-bottom: 10px;">🖥️ 本机 EasyAIoT Docker 容器监控看板</div>
+            <div style="overflow-x: auto;">
+                <table class="status-table">
+                    <thead>
+                        <tr>
+                            <th>容器名称</th>
+                            <th>基础镜像</th>
+                            <th>物理状态</th>
+                            <th>监控健康度</th>
+                        </tr>
+                    </thead>
+                    <tbody id="status-body">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted);">正在加载 Docker 板块状态...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 渐进式引导页逻辑
+    let currentStep = 1;
+    const maxSteps = 4;
+
+    function changeStep(step) {
+        if (step < 1 || step > maxSteps) return;
+        
+        // 如果是从第4步退回，且正在部署中，不建议退回
+        const btn = document.getElementById('deploy-btn');
+        if (btn.disabled && step < 4) {
+            if(!confirm("正在执行部署，确认离开当前步骤监控页？")) {
+                return;
+            }
+        }
+
+        // 更新页面显隐
+        document.querySelectorAll('.wizard-step-page').forEach((page, idx) => {
+            if (idx === (step - 1)) {
+                page.classList.add('active');
+            } else {
+                page.classList.remove('active');
+            }
+        });
+
+        // 更新步骤条进度
+        document.querySelectorAll('.step-item').forEach((node, idx) => {
+            const nodeNum = idx + 1;
+            node.classList.remove('active', 'completed');
+            if (nodeNum === step) {
+                node.classList.add('active');
+            } else if (nodeNum < step) {
+                node.classList.add('completed');
+            }
+        });
+
+        // 连线进度条百分比
+        const progressLine = document.getElementById('progress-line');
+        const percent = ((step - 1) / (maxSteps - 1)) * 80; // 连线范围在中间
+        progressLine.style.width = percent + '%';
+
+        currentStep = step;
+        
+        if (step === 4) {
+            fetchStatus();
+        }
+    }
+
+    let isPollingSuspended = false;
+
+    // 初始化加载
+    window.addEventListener('DOMContentLoaded', () => {
+        fetchConfig();
+        fetchStatus();
+        setInterval(() => {
+            if (!isPollingSuspended) {
+                fetchStatus();
+            }
+        }, 6000); 
+
+        // 监听第一步中间件 GPUStack 勾选状态的变化
+        const gpustackEl = document.getElementById('mw-GPUStack');
+        if (gpustackEl) {
+            gpustackEl.addEventListener('change', (e) => {
+                if (!e.target.checked) {
+                    const currentProvider = document.querySelector('input[name="ai-provider"]:checked')?.value;
+                    if (currentProvider === 'local') {
+                        // 自动切换到阿里云通义百炼，并提示
+                        selectRadio('ai-provider', 'aliyun');
+                        alert("由于您关闭了本地 GPUStack 中间件，大模型提供商已自动切换为“阿里云通义百炼”。");
+                    }
+                }
+            });
+        }
+    });
+
+    // 提示信息系统
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-msg ${type}`;
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        if (type === 'error') icon = '❌';
+        if (type === 'warning') icon = '⚠️';
+        
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+
+    let isProbingMirrors = false;
+    function triggerProbeMirrors(autoSelect = false) {
+        if (isProbingMirrors) return;
+        isProbingMirrors = true;
+        
+        const statusEl = document.getElementById('mirror-probe-status');
+        const btnEl = document.getElementById('btn-probe-mirror');
+        const selectEl = document.getElementById('DOCKER_MIRROR');
+        const originalBtnText = btnEl.innerHTML;
+        
+        statusEl.innerHTML = "正在测速中...";
+        statusEl.style.color = "var(--primary)";
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<span class="deploying-spinner"></span> 测速中';
+        
+        fetch('/api/probe_mirrors')
+            .then(res => res.json())
+            .then(data => {
+                isProbingMirrors = false;
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalBtnText;
+                
+                if (data.status === 'success') {
+                    const selectVal = selectEl.value;
+                    selectEl.innerHTML = '';
+                    
+                    let bestMirrorName = "";
+                    let bestMirrorLatency = 999;
+                    
+                    data.mirrors.forEach(m => {
+                        const option = document.createElement('option');
+                        option.value = m.value;
+                        const latText = m.latency >= 99.0 ? '超时' : `${m.latency}s`;
+                        option.textContent = `${m.name} (${latText})`;
+                        selectEl.appendChild(option);
+                        
+                        if (m.value === data.best_mirror) {
+                            bestMirrorName = m.name;
+                            bestMirrorLatency = m.latency;
+                        }
+                    });
+                    
+                    selectEl.value = selectVal;
+                    
+                    const currentOption = data.mirrors.find(m => m.value === selectVal);
+                    const currentLatency = currentOption ? currentOption.latency : 999;
+                    
+                    statusEl.innerHTML = `推荐最优: ${bestMirrorName.split(' ')[0]} (${bestMirrorLatency}s)`;
+                    statusEl.style.color = "var(--accent-green)";
+                    
+                    const shouldSwitch = autoSelect || 
+                                         (selectVal === 'https://docker.m.daocloud.io' && currentLatency >= 10.0 && data.best_mirror !== selectVal) || 
+                                         (currentLatency >= 10.0 && data.best_mirror && data.best_mirror !== selectVal);
+                    
+                    if (shouldSwitch && data.best_mirror !== selectVal) {
+                        selectEl.value = data.best_mirror;
+                        showToast(`已为您自动切换至最优镜像: ${bestMirrorName} (${bestMirrorLatency}s)`, 'success');
+                    } else if (autoSelect) {
+                        showToast(`当前已是最优镜像: ${currentOption ? currentOption.name : '直连'}`, 'success');
+                    }
+                } else {
+                    statusEl.innerHTML = "测速失败";
+                    statusEl.style.color = "var(--accent-red)";
+                    showToast('镜像源测速失败，请手动选择', 'warning');
+                }
+            })
+            .catch(err => {
+                isProbingMirrors = false;
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalBtnText;
+                statusEl.innerHTML = "网络异常";
+                statusEl.style.color = "var(--accent-red)";
+                console.error('镜像测速请求失败: ', err);
+                showToast('测速接口请求失败，请检查后端运行状态', 'error');
+            });
+    }
+
+    let rawConfig = {};
+    const ALL_MIDDLEWARES_LIST = ["TDengine", "EMQX", "Milvus", "GPUStack", "NodeRED"];
+
+    function fetchConfig() {
+        fetch('/api/config')
+            .then(res => res.json())
+            .then(data => {
+                rawConfig = data;
+                
+                // 回填中间件
+                ALL_MIDDLEWARES_LIST.forEach(mw => {
+                    const el = document.getElementById('mw-' + mw);
+                    if (el) {
+                        el.checked = data.middlewares.includes(mw);
+                    }
+                });
+
+                // 回填微服务容器部署开关 (默认全部关闭，提高 Windows 用户体验，只在检测到容器运行时回填 true)
+                const ALL_SERVICES_LIST = ["DEVICE", "AI", "VIDEO", "WEB"];
+                ALL_SERVICES_LIST.forEach(svc => {
+                    const el = document.getElementById('svc-' + svc);
+                    if (el) {
+                        el.checked = data.services.includes(svc);
+                    }
+                });
+
+                // 回填镜像加速源
+                document.getElementById('DOCKER_MIRROR').value = data.docker_mirror || 'https://docker.m.daocloud.io';
+                triggerProbeMirrors(false);
+
+                // 回填环境变量
+                document.getElementById('DATABASE_URL').value = data.env_vars.DATABASE_URL || '';
+                document.getElementById('KAFKA_BOOTSTRAP_SERVERS').value = data.env_vars.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092';
+                document.getElementById('MINIO_ENDPOINT').value = data.env_vars.MINIO_ENDPOINT || 'localhost:9000';
+                document.getElementById('REDIS_HOST').value = data.env_vars.REDIS_HOST || 'localhost:6379';
+                document.getElementById('REDIS_PASSWORD').value = data.env_vars.REDIS_PASSWORD || 'basiclab@iot975248395';
+                document.getElementById('AI_SERVICE_URL').value = data.env_vars.AI_SERVICE_URL || 'http://localhost:5000';
+                
+                document.getElementById('LLM_API_KEY').value = data.env_vars.LLM_API_KEY || data.env_vars.DASHSCOPE_API_KEY || '';
+                document.getElementById('LLM_BASE_URL').value = data.env_vars.LLM_BASE_URL || '';
+                document.getElementById('LLM_MODEL_NAME').value = data.env_vars.LLM_MODEL_NAME || '';
+
+                // 回填单选状态
+                setRadioState('db-mode', data.env_vars.DB_MODE || 'local');
+                setRadioState('gpu-mode', data.env_vars.USE_GPU || 'false');
+                
+                // 识别 LLM Vendor 并回填
+                const activeVendor = data.env_vars.LLM_VENDOR || (data.env_vars.DASHSCOPE_API_KEY ? 'aliyun' : 'local');
+                setRadioState('ai-provider', activeVendor);
+            })
+            .catch(err => console.error('加载系统配置失败: ', err));
+    }
+
+    function fetchStatus() {
+        fetch('/api/status')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('status-body');
+                if (data.length === 0 || data[0].error) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">${data[0]?.error || '本机暂未运行任何容器，请点击部署启动服务。'}</td></tr>`;
+                    return;
+                }
+                let html = '';
+                data.forEach(c => {
+                    const badgeClass = c.running ? 'badge-success' : 'badge-danger';
+                    const badgeText = c.running ? 'Running' : 'Stopped';
+                    html += `
+                        <tr>
+                            <td style="font-family: var(--font-mono); font-weight: 500;">${c.name}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${c.image}</td>
+                            <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">${c.status}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById('status-body').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--accent-red);">未检测到本地 Docker Daemon，请确认其正常运行: ${err}</td></tr>`;
+            });
+    }
+
+    // 单选联动
+    function selectRadio(name, val) {
+        setRadioState(name, val);
+    }    function setRadioState(name, val) {
+        const btns = document.querySelectorAll(`input[name="${name}"]`);
+        btns.forEach(input => {
+            const isMatch = input.value === val;
+            input.checked = isMatch;
+            const parent = input.parentElement;
+            if (isMatch) {
+                parent.classList.add('active');
+            } else {
+                parent.classList.remove('active');
+            }
+        });
+        
+        if (name === 'db-mode') {
+            document.getElementById('db-url-group').style.display = val === 'cloud' ? 'block' : 'none';
+        }
+        if (name === 'ai-provider') {
+            const apiKeyGroup = document.getElementById('ai-api-key-group');
+            const baseUrlGroup = document.getElementById('ai-base-url-group');
+            const modelNameGroup = document.getElementById('ai-model-name-group');
+
+            const defaults = {
+                local: { url: 'http://localhost:5633/v1', model: 'qwen2.5-vl-7b-instruct' },
+                aliyun: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-vl-max' },
+                openai: { url: 'https://api.openai.com/v1', model: 'gpt-4o' },
+                anthropic: { url: 'https://api.anthropic.com/v1', model: 'claude-3-5-sonnet-20241022' },
+                custom: { url: '', model: '' }
+            };
+
+            const currentUrl = document.getElementById('LLM_BASE_URL').value;
+            const currentModel = document.getElementById('LLM_MODEL_NAME').value;
+
+            const allUrls = Object.values(defaults).map(d => d.url).filter(Boolean);
+            const allModels = Object.values(defaults).map(d => d.model).filter(Boolean);
+
+            if (!currentUrl || allUrls.includes(currentUrl)) {
+                document.getElementById('LLM_BASE_URL').value = defaults[val].url;
+            }
+            if (!currentModel || allModels.includes(currentModel)) {
+                document.getElementById('LLM_MODEL_NAME').value = defaults[val].model;
+            }
+
+            if (val === 'local') {
+                apiKeyGroup.style.display = 'none';
+                baseUrlGroup.style.display = 'block';
+                modelNameGroup.style.display = 'block';
+
+                // Linkage: Auto-check local GPUStack in Step 1
+                const gpustackEl = document.getElementById('mw-GPUStack');
+                if (gpustackEl && !gpustackEl.checked) {
+                    gpustackEl.checked = true;
+                }
+            } else if (val === 'custom') {
+                apiKeyGroup.style.display = 'block';
+                baseUrlGroup.style.display = 'block';
+                modelNameGroup.style.display = 'block';
+            } else { // aliyun, openai, anthropic
+                apiKeyGroup.style.display = 'block';
+                baseUrlGroup.style.display = 'none';
+                modelNameGroup.style.display = 'block';
+            }
+        }
+    }
+
+    // 执行部署
+    function startDeployment() {
+        isPollingSuspended = true;
+        const btn = document.getElementById('deploy-btn');
+        const backBtn = document.getElementById('back-btn-step4');
+        btn.disabled = true;
+        backBtn.disabled = true;
+        btn.innerHTML = `<span class="deploying-spinner"></span> 部署写入中...`;
+
+        const dbMode = document.querySelector('input[name="db-mode"]:checked').value;
+        const config = {
+            middlewares: ["Nacos", "Redis", "MinIO", "Kafka", "SRS", "ZLMediaKit"], 
+            services: [],
+            env_vars: {},
+            mirror_prefix: document.getElementById('DOCKER_MIRROR').value
+        };
+        
+        // 只有在选择本地数据库模式时，才部署本地 PostgreSQL 容器
+        if (dbMode === 'local') {
+            config.middlewares.push("PostgresSQL");
+        }
+
+        const mws = ["TDengine", "EMQX", "Milvus", "GPUStack", "NodeRED"];
+        mws.forEach(mw => {
+            if (document.getElementById('mw-' + mw)?.checked) {
+                config.middlewares.push(mw);
+            }
+        });
+
+        const svcs = ["DEVICE", "AI", "VIDEO", "WEB"];
+        svcs.forEach(svc => {
+            if (document.getElementById('svc-' + svc)?.checked) {
+                config.services.push(svc);
+            }
+        });
+
+        config.env_vars["DB_MODE"] = dbMode;
+        config.env_vars["DATABASE_URL"] = document.getElementById('DATABASE_URL').value;
+        config.env_vars["KAFKA_BOOTSTRAP_SERVERS"] = document.getElementById('KAFKA_BOOTSTRAP_SERVERS').value;
+        config.env_vars["MINIO_ENDPOINT"] = document.getElementById('MINIO_ENDPOINT').value;
+        config.env_vars["REDIS_HOST"] = document.getElementById('REDIS_HOST').value;
+        config.env_vars["REDIS_PASSWORD"] = document.getElementById('REDIS_PASSWORD').value;
+        config.env_vars["AI_SERVICE_URL"] = document.getElementById('AI_SERVICE_URL').value;
+        
+        const aiProvider = document.querySelector('input[name="ai-provider"]:checked').value;
+        config.env_vars["LLM_VENDOR"] = aiProvider;
+        config.env_vars["LLM_API_KEY"] = document.getElementById('LLM_API_KEY').value;
+        config.env_vars["LLM_BASE_URL"] = document.getElementById('LLM_BASE_URL').value;
+        config.env_vars["LLM_MODEL_NAME"] = document.getElementById('LLM_MODEL_NAME').value;
+        config.env_vars["DASHSCOPE_API_KEY"] = aiProvider === 'aliyun' ? document.getElementById('LLM_API_KEY').value : '';
+        
+        config.env_vars["USE_GPU"] = document.querySelector('input[name="gpu-mode"]:checked').value;
+        // 打开终端显
+        document.getElementById('terminal-container').style.display = 'block';
+        const consoleOutput = document.getElementById('console-output');
+        consoleOutput.innerHTML = '<div class="terminal-line info">正在写入本地配置文件，连接异步容器日志管道中...</div>';
+
+        fetch('/api/deploy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.status === 'success') {
+                connectLogs();
+            } else {
+                alert('任务启动失败：' + resData.message);
+                isPollingSuspended = false;
+                btn.disabled = false;
+                backBtn.disabled = false;
+                btn.innerHTML = '🚀 保存并执行部署';
+            }
+        })
+        .catch(err => {
+            alert('保存异常: ' + err);
+            isPollingSuspended = false;
+            btn.disabled = false;
+            backBtn.disabled = false;
+            btn.innerHTML = '🚀 保存并执行部署';
+        });
+    }
+
+    // SSE 通道日志
+    let eventSource = null;
+    function connectLogs() {
+        if (eventSource) {
+            eventSource.close();
+        }
+        
+        eventSource = new EventSource('/api/logs');
+        const consoleOutput = document.getElementById('console-output');
+        
+        eventSource.onmessage = function(e) {
+            const data = e.data;
+            const trimmedData = data ? data.trim() : '';
+            if (trimmedData.includes('[EOF]')) {
+                eventSource.close();
+                isPollingSuspended = false;
+                const isSuccess = trimmedData.includes('SUCCESS') || trimmedData === '[EOF]';
+                if (isSuccess) {
+                    consoleOutput.innerHTML += '<div class="terminal-line success">✓ 部署命令全部执行完毕，配置写入已生效！</div>';
+                } else {
+                    consoleOutput.innerHTML += '<div class="terminal-line error">× 部署终止，中间出现执行错误，请检查日志！</div>';
+                }
+                
+                const btn = document.getElementById('deploy-btn');
+                const backBtn = document.getElementById('back-btn-step4');
+                btn.disabled = false;
+                backBtn.disabled = false;
+                btn.innerHTML = '🚀 保存并执行部署';
+                fetchStatus();
+                return;
+            }
+
+            let cssClass = '';
+            if (data.includes('[ERROR]') || data.includes('failed') || data.includes('Error')) {
+                cssClass = 'error';
+            } else if (data.includes('[WARNING]') || data.includes('warn')) {
+                cssClass = 'warn';
+            } else if (data.includes('[SUCCESS]') || data.includes('Successfully') || data.includes('done')) {
+                cssClass = 'success';
+            } else if (data.includes('[INFO]')) {
+                cssClass = 'info';
+            }
+
+            const isAtBottom = consoleOutput.scrollHeight - consoleOutput.clientHeight - consoleOutput.scrollTop < 50;
+
+            const cleanLine = document.createElement('div');
+            cleanLine.className = 'terminal-line ' + cssClass;
+            cleanLine.textContent = data;
+            consoleOutput.appendChild(cleanLine);
+            
+            if (isAtBottom) {
+                requestAnimationFrame(() => {
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                });
+            }
+        };
+
+        eventSource.onerror = function() {
+            eventSource.close();
+            isPollingSuspended = false;
+            consoleOutput.innerHTML += '<div class="terminal-line error">× 日志连接中断。</div>';
+            const btn = document.getElementById('deploy-btn');
+            const backBtn = document.getElementById('back-btn-step4');
+            btn.disabled = false;
+            backBtn.disabled = false;
+            btn.innerHTML = '🚀 保存并执行部署';
+            fetchStatus();
+        };
+    }
+
+    // 卸载容器
+    function stopDeployment() {
+        if (!confirm('警告：这将会停止并注销本机所有 EasyAIoT 的 Docker 容器！确认吗？')) {
+            return;
+        }
+        isPollingSuspended = true;
+        const btn = document.getElementById('stop-btn');
+        btn.disabled = true;
+        btn.innerHTML = '⏹️ 卸载中...';
+
+        document.getElementById('terminal-container').style.display = 'block';
+        const consoleOutput = document.getElementById('console-output');
+        consoleOutput.innerHTML = '<div class="terminal-line warn">发送容器注销清理命令中...</div>';
+
+        fetch('/api/stop', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            connectLogs();
+            btn.disabled = false;
+            btn.innerHTML = '⏹️ 停止卸载容器';
+        })
+        .catch(err => {
+            alert('卸载异常: ' + err);
+            isPollingSuspended = false;
+            btn.disabled = false;
+            btn.innerHTML = '⏹️ 停止卸载容器';
+        });
+    }
+</script>
+
+</body>
+</html>
